@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,11 +10,28 @@ namespace ConsoleATM
     class Auth
     {
         //Class for handling authentication and transactions to and from the bank account
-        private string secret = "1234";  //the PIN the user enters must match this for access; ideally it would be hashed and salted, but I didn't think that would be needed for this
-
+        private string secret;
         private double balance = 0;  //the user begins with a 0 balance
-      
-        public bool checkPIN(string PIN)  //simple comparison to validate the secret against what the user enters
+
+        public Auth()
+        {
+            // Read the PIN from the configuration file
+            try
+            {
+                secret = ConfigurationManager.AppSettings["PIN"];
+                if (string.IsNullOrEmpty(secret))
+                {
+                    throw new Exception("PIN not found in configuration.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading PIN from configuration: {ex.Message}");
+                Environment.Exit(1); // Exit the application if the PIN cannot be read
+            }
+        }
+
+        public bool checkPIN(string PIN)
         {
             if (PIN == secret)
             {
