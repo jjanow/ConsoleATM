@@ -63,27 +63,24 @@ namespace ConsoleATM
             return true;
         }
 
-        public bool Sub(double amount)  //subtracts money from the account; validates that the value is positive and won't take them below $-35
+        public bool Sub(double amount)
         {
-            if (balance < -35)
-            {
-                Console.WriteLine("\nInsufficient funds.");
-                return false;
-            }
-            else if (balance - amount < -35)
-            {
-                Console.WriteLine("\nInsufficient funds.");
-                return false;
-            }
-            else if (amount <= 0)
+            // Check for negative or zero amount
+            if (amount <= 0)
             {
                 Console.WriteLine("\nInvalid transaction amount.");
+                return false;
             }
-            else
+
+            // Check for insufficient funds
+            if (balance - amount < 0)
             {
-                balance -= amount;
-                Console.WriteLine("\nAmount withdrawn.");
+                Console.WriteLine("\nInsufficient funds.");
+                return false;
             }
+
+            balance -= amount;
+            Console.WriteLine("\nAmount withdrawn.");
             return true;
         }
     }

@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace ConsoleATM
 {
@@ -11,112 +6,105 @@ namespace ConsoleATM
     {
         static void Main(string[] args)
         {
-            //Entry point for the main program.  Initial classes and state are setup.
-            Auth atm = new Auth();  //This class handles authentication and authorization for funds actions.
-            ATMMenu menu = new ATMMenu();  //This class handles the menu based on the current state of the object.
-            string state = "login";  //default state at runtime.
+            Auth atm = new Auth();
+            ATMMenu menu = new ATMMenu();
+            string state = "login";
 
-            while (true)  //main program loop.  should remain continuous to support changing states for the menu levels.
+            while (true)
             {
-                while (state == "login")  //this should be the default state. it decides what an unauthenticated user sees at the logon prompt.
+                while (state == "login")
                 {
-                    menu.SetState(state);
-                    menu.Draw();
-                    var ch = Console.ReadKey(true).Key;
-
-                    switch (ch)  //base on the user's keystroke, different menus items are executed.
-                    {
-                        case ConsoleKey.D0:
-                            Console.Clear();
-                            break;
-
-                        case ConsoleKey.D1:
-                            Console.Write("\nPlease enter your PIN: ");
-                            string PIN = Console.ReadLine();
-                            if (atm.checkPIN(PIN) == false)  //failed authentication.
-                            {
-                                Console.Write("\nFailed authentication");
-                                break;
-                            }
-                            else
-                            {
-                                state = "main";
-                            }
-                            break;
-
-                        case ConsoleKey.D9:
-                            System.Environment.Exit(1);  //gracefully terminate with error level 1.
-                            break;
-                    }
+                    HandleLoginState(menu, ref state, atm);
                 }
 
-                while (state == "main")  //this is the menu state for authenticated users and provides access to a larger series of actions
+                while (state == "main")
                 {
-                    menu.SetState(state);
-                    menu.Draw();
-                    var ch = Console.ReadKey(true).Key;
-
-                    switch (ch)
-                    {
-                        case ConsoleKey.D0:
-                            Console.Clear();
-                            break;
-
-                        case ConsoleKey.D1: //add money to the account
-                            Console.Write("Enter amount to add: ");
-                            string amtadd = Console.ReadLine();
-                            if (isDouble(amtadd)) //to verify that the input is actually a double
-                            {
-                                atm.Add(Convert.ToDouble(amtadd));  //pass the input to the atm object where it will receive further vetting
-                            }
-                            else
-                            {
-                                Console.Write("\nInvalid amount");
-                            }
-                            Console.Write("\n");
-                            break;
-
-                        case ConsoleKey.D2:  //subtract money from the account
-                            Console.Write("Enter amount to withdraw: ");
-                            string amtsub = Console.ReadLine();
-                            if (isDouble(amtsub))   //to verify that the input is actually a double
-                            {
-                                atm.Sub(Convert.ToDouble(amtsub));  //pass the input to the atm object where it will receive further vetting
-                            }
-                            else
-                            {
-                                Console.Write("\nInvalid amount");
-                            }
-                            Console.Write("\n");
-                            break;
-
-                        case ConsoleKey.D3:  //prints out the current balance
-                            atm.Balance();
-                            Console.Write("\n");
-                            break;
-
-                        case ConsoleKey.D4:  //returns to the logon screen
-                            state = "login";
-                            Console.Clear();
-                            break;
-                    }
-
-                    break;
+                    HandleMainState(menu, ref state, atm);
                 }
             }
         }
 
-        //function to test string input to see if it can be used as a double data type
+        static void HandleLoginState(ATMMenu menu, ref string state, Auth atm)
+        {
+            menu.SetState(state);
+            menu.Draw();
+            var ch = Console.ReadKey(true).Key;
+
+            switch (ch)
+            {
+                case ConsoleKey.D0:
+                    Console.Clear();
+                    break;
+                case ConsoleKey.D1:
+                    Console.Write("\nPlease enter your PIN: ");
+                    string PIN = Console.ReadLine();
+                    if (atm.checkPIN(PIN) == false)
+                    {
+                        Console.Write("\nFailed authentication");
+                        break;
+                    }
+                    else
+                    {
+                        state = "main";
+                    }
+                    break;
+                case ConsoleKey.D9:
+                    Environment.Exit(1);
+                    break;
+            }
+        }
+
+        static void HandleMainState(ATMMenu menu, ref string state, Auth atm)
+        {
+            menu.SetState(state);
+            menu.Draw();
+            var ch = Console.ReadKey(true).Key;
+
+            switch (ch)
+            {
+                case ConsoleKey.D0:
+                    Console.Clear();
+                    break;
+                case ConsoleKey.D1:
+                    HandleTransaction(atm.Add, "Enter amount to add: ");
+                    break;
+                case ConsoleKey.D2:
+                    HandleTransaction(atm.Sub, "Enter amount to withdraw: ");
+                    break;
+                case ConsoleKey.D3:
+                    atm.Balance();
+                    Console.Write("\n");
+                    break;
+                case ConsoleKey.D4:
+                    state = "login";
+                    Console.Clear();
+                    break;
+            }
+        }
+
+        static void HandleTransaction(Func<double, bool> transactionMethod, string prompt)
+        {
+            Console.Write(prompt);
+            string amountStr = Console.ReadLine();
+            if (isDouble(amountStr))
+            {
+                transactionMethod(Convert.ToDouble(amountStr));
+            }
+            else
+            {
+                Console.Write("\nInvalid amount");
+            }
+            Console.Write("\n");
+        }
+
         static bool isDouble(string str)
         {
             double d;
-
             if (Double.TryParse(str, out d))
-            {   
+            {
                 return true;
-            }  
-                return false;
+            }
+            return false;
         }
-
     }
 }
